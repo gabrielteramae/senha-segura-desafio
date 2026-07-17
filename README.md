@@ -75,10 +75,6 @@ curl -X POST http://localhost:8003/validate-password \
 }
 ```
 
-## Deploy
-
-Pronto para subir no [Railway](https://railway.app): start command `uvicorn app.main:app --host 0.0.0.0 --port $PORT`.
-
 ---
 
 © 2026 Gabriel Teramae Chan
