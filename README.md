@@ -2,7 +2,6 @@
 
 ![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)
-![License](https://img.shields.io/badge/license-MIT-blue)
 
 Solução para o desafio [`backend-br/desafios/secure-password`](https://github.com/backend-br/desafios/blob/master/secure-password/PROBLEM.md): validar se uma senha é considerada segura com base em critérios pré-definidos.
 
