@@ -35,8 +35,8 @@ app/
 ## Como rodar
 
 ```bash
-git clone <seu-repo>
-cd secure-password-api
+git clone https://github.com/gabrielteramae/senha-segura-desafio.git
+cd senha-segura-desafio
 pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8003
 ```
