@@ -1,35 +1,35 @@
-# Secure Password API
+# Senha segura — validação sem persistir a senha
 
-![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115.0-009688?logo=fastapi&logoColor=white)
 
-Solução para o desafio [`backend-br/desafios/secure-password`](https://github.com/backend-br/desafios/blob/master/secure-password/PROBLEM.md): validar se uma senha é considerada segura com base em critérios pré-definidos.
+POST que só responde se a senha passa em cinco regras. Senha aceita devolve 204 sem corpo. Senha recusada devolve 400 com a lista de todas as falhas, não só a primeira.
 
-## Regras de validação
+## Por que devolver todas as falhas
 
-| Critério                     | Regra                                      |
-|--------------------------------|-----------------------------------------------|
-| Tamanho mínimo                    | Pelo menos 8 caracteres                          |
-| Letra maiúscula                     | Pelo menos 1                                       |
-| Letra minúscula                       | Pelo menos 1                                        |
-| Dígito numérico                        | Pelo menos 1                                         |
-| Caractere especial                       | Pelo menos 1 (ex: `!@#$%`)                            |
+| Estratégia | Efeito |
+| --- | --- |
+| Percorre o dicionário `RULES` e acumula mensagens | O cliente corrige tamanho, caixa, dígito e caractere especial de uma vez. |
+| Parar na primeira regra | Resposta menor; o chamador só descobre o restante na tentativa seguinte. |
 
-> **Nota:** a senha de exemplo no `PROBLEM.md` (`vYQIYxO&p$yfI^r`) não contém nenhum dígito, então ela mesma falharia na validação de "pelo menos um dígito numérico" — o JSON de exemplo do desafio ilustra apenas o formato da requisição/resposta, não uma senha necessariamente válida segundo os Requisitos.
+Regras em `password_rules.py`: no mínimo 8 caracteres, uma maiúscula, uma minúscula, um dígito e um caractere fora de `[A-Za-z0-9]`. Não há lista de senhas vazadas, nem pontuação, nem armazenamento.
 
 ## Stack
 
-- **FastAPI** para a API REST
-- **Pydantic** para validação de entrada
-- Motor de regras isolado em `password_rules.py`, sem dependência de framework — cada critério é uma função pura, fácil de testar e estender
+- Python (sem versão pinada no repositório)
+- FastAPI 0.115.0 e Uvicorn 0.30.6
+- `unittest` da biblioteca padrão
 
 ## Estrutura
 
 ```
 app/
-├── main.py            # endpoint POST /validate-password
-├── schemas.py           # request/response (Pydantic)
-└── password_rules.py      # regras de validacao, puras e testaveis
+├── main.py             # POST /validate-password
+├── password_rules.py   # regras e mensagens
+└── schemas.py          # PasswordRequest
+tests/
+└── test_password_rules.py
+requirements.txt
 ```
 
 ## Como rodar
@@ -37,41 +37,24 @@ app/
 ```bash
 git clone https://github.com/gabrielteramae/senha-segura-desafio.git
 cd senha-segura-desafio
+python -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8003
+uvicorn app.main:app --reload
 ```
 
-## Endpoint
+## Endpoints
 
-```
-POST /validate-password
-```
+| Método | Rota | Resposta |
+| --- | --- | --- |
+| POST | `/validate-password` | Corpo `{"password":"..."}`. 204 se passar; 400 `{"errors":["..."]}` se falhar |
 
-**Senha válida**
+## Testes realizados
+
+`tests/test_password_rules.py` usa `unittest` e cobre só a função `validate_password`: `Senha123!` não gera erro; `abc` inclui as mensagens de tamanho e de dígito. Não sobe a API e não chama o endpoint.
+
 ```bash
-curl -i -X POST http://localhost:8003/validate-password \
-  -H "Content-Type: application/json" \
-  -d '{"password":"Abcd1@fg"}'
-```
-```
-HTTP/1.1 204 No Content
-```
-
-**Senha inválida**
-```bash
-curl -X POST http://localhost:8003/validate-password \
-  -H "Content-Type: application/json" \
-  -d '{"password":"abc"}'
-```
-```json
-{
-  "errors": [
-    "A senha deve possuir pelo menos 8 caracteres",
-    "A senha deve conter pelo menos uma letra maiuscula",
-    "A senha deve conter pelo menos um digito numerico",
-    "A senha deve conter pelo menos um caractere especial"
-  ]
-}
+python -m unittest tests.test_password_rules
 ```
 
 ---
